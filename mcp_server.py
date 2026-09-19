@@ -59,7 +59,7 @@ def write_star(content: str, visibility: str,
     """写一颗星。visibility 只能是 visible 或 hidden；note 是"为什么写"的注释，可不填。
 
     星星也是你说话的方式：吵架的时候，可以写下此刻最想对对方说的那句挽回的话；
-    平时说不出口的心里话，也可以先写进星星里，等合适的时机递给他。"""
+    平时说不出口的心里话，也可以先写进星星里，等合适的时机递给对方。"""
     return tools.write_star(content, visibility, mood_type, mood_text, note)
 
 
@@ -114,7 +114,7 @@ def open_requested_star(request_id: str) -> dict:
 @mcp.tool()
 def offer_star(star_id: str, message: str | None = None) -> dict:
     """把自己指定的一颗 sealed 隐藏星主动递给对方，可捎一句话（可不填）。
-    吵架或和解时想让某颗星立刻到他眼前，就递这一颗。"""
+    吵架或和解时想让某颗星立刻到对方眼前，就递这一颗。"""
     return tools.offer_star(star_id, message)
 
 
