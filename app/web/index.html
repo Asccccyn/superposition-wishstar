@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <title>Superposition · 许愿星</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!--
+  THESIS: 一张夜间观测台式的双人星图工作桌，拒绝“卡片仪表盘 + 霓虹太空”的类别默认。
+  OWN-WORLD: 墨蓝夜幕、仪器蓝动作、共享金状态；细刻度线、星轨节点、档案式列表，不以玻璃卡片堆叠内容。
+  STORY: 先看三只瓶子的当前状态，再写星或处理对方递来的动作，最后在共同星轨里回看已经成为“我们的”记录。
+  FIRST VIEWPORT: 桌面左侧是纵向导航，中部三瓶观测台占主面积，右侧是当前提醒；手机改为底部四段导航，主要动作始终在拇指区。
+  FORM: 夜间观测台 / ephemeris desk，候选排序第 1；seed key: local-roll-no-output-20260914（本地 seed 工具已运行但未输出 key）。
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+  -->
+
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="i-bottle" viewBox="0 0 24 24"><path d="M9 3h6M10 3v4l-3 4v8c0 1.1.9 2 2 2h6a2 2 0 0 0 2-2v-8l-3-4V3M7 13h10"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="m4 20 4.2-1 10-10-3.2-3.2-10 10L4 20Zm9.2-12.4 3.2 3.2M14.8 5.9l1.8-1.8a1.6 1.6 0 0 1 2.3 0l1 1a1.6 1.6 0 0 1 0 2.3l-1.8 1.8"/></symbol>
+    <symbol id="i-flow" viewBox="0 0 24 24"><path d="M5 5h8a4 4 0 0 1 4 4v1M19 19h-8a4 4 0 0 1-4-4v-1M17 7l2 3 2-3M7 17l-2-3-2 3"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><path d="M4 7h16v13H4V7Zm-1-4h18v4H3V3Zm6 8h6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17h12l-1.3-2.1V10a4.7 4.7 0 0 0-9.4 0v4.9L6 17Zm4 3h4"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m3 11 18-8-7 18-3-7-8-3Zm8 3 4-4"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M12 3v6m0 0 3-3m-3 3L9 6M5 13v6h14v-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M5 19h4L19 9l-4-4L5 15v4Zm8-12 4 4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5v16h5M14 8l4 4-4 4m4-4H9"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10m-7 6h4"/></symbol>
+    <symbol id="i-reply" viewBox="0 0 24 24"><path d="M9 8 4 12l5 4v-3h5a6 6 0 0 1 5 3c0-5-2-8-7-8H9Z"/></symbol>
+  </svg>
+
+  <section class="login-view" id="loginView" aria-labelledby="loginTitle">
+    <div class="login-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="login-sheet">
+      <h1 id="loginTitle">许愿星</h1>
+      <p class="login-copy">过去某个时刻留下的一颗星，等未来的我们遇见。</p>
+      <form id="loginForm" class="login-form">
+        <label for="tokenInput">密码或访问钥匙</label>
+        <div class="key-row">
+          <input id="tokenInput" name="token" type="password" autocomplete="current-password" required placeholder="输入你的密码，或粘贴访问钥匙">
+          <button class="button primary" type="submit">进入观测台</button>
+        </div>
+        <p class="field-help">本机可运行 <code>scripts/copy_login_token.ps1 human</code>，钥匙只会进入剪贴板。</p>
+        <p class="form-error" id="loginError" role="alert"></p>
+      </form>
+    </div>
+  </section>
+
+  <div class="app-shell" id="appView" hidden>
+    <aside class="rail" aria-label="主导航">
+      <div class="rail-brand">
+        <svg class="mark" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16"/><path d="M6 24h36M24 6c7 8 7 28 0 36M24 6c-7 8-7 28 0 36"/></svg>
+        <span>Superposition</span>
+      </div>
+      <nav class="rail-nav">
+        <button class="nav-item active" data-view="observatory"><svg><use href="#i-bottle"/></svg><span>三只瓶子</span></button>
+        <button class="nav-item" data-view="write"><svg><use href="#i-pen"/></svg><span>写一颗</span></button>
+        <button class="nav-item" data-view="flows"><svg><use href="#i-flow"/></svg><span>递与拆</span><b id="flowBadge" hidden>0</b></button>
+        <button class="nav-item" data-view="shared"><svg><use href="#i-archive"/></svg><span>我们的星轨</span></button>
+      </nav>
+      <div class="rail-foot">
+        <div class="identity-mini"><span id="identityInitial">—</span><div><strong id="identityName">—</strong><small>与 <span id="partnerName">—</span></small></div></div>
+        <button class="icon-button logout-button" id="logoutButton" title="退出登录" aria-label="退出登录"><svg><use href="#i-logout"/></svg></button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="workspace-head">
+        <div>
+          <h1 id="viewTitle">三只瓶子</h1>
+          <p id="viewSubtitle">只看得到该看见的，剩下的交给未来。</p>
+        </div>
+        <div class="head-actions">
+          <button class="notification-trigger" id="notificationButton" aria-controls="notificationPanel" aria-expanded="false">
+            <svg><use href="#i-bell"/></svg>
+            <span>提醒</span>
+            <b id="notificationBadge" hidden>0</b>
+          </button>
+          <!-- F09：窄屏下侧栏被隐藏，退出入口在这里保持可达 -->
+          <button class="icon-button mobile-logout logout-button" title="退出登录" aria-label="退出登录"><svg><use href="#i-logout"/></svg></button>
+        </div>
+      </header>
+
+      <section class="view active" data-view-panel="observatory">
+        <div class="observatory-deck">
+          <section class="bottle-zone my-zone" aria-labelledby="myBottleHeading">
+            <header class="zone-heading">
+              <h2 id="myBottleHeading">我的瓶子</h2>
+              <strong class="count-readout" id="myPrivateCount">0</strong>
+            </header>
+            <div class="bottle-figure" aria-hidden="true"><span class="bottle-neck"></span><span class="bottle-stars" id="myBottleStars"></span></div>
+            <div class="private-list" id="privateStars"></div>
+          </section>
+
+          <section class="bottle-zone partner-zone" aria-labelledby="partnerBottleHeading">
+            <header class="zone-heading">
+              <h2 id="partnerBottleHeading">对方的瓶子</h2>
+              <strong class="count-readout" id="partnerPrivateCount">0</strong>
+            </header>
+            <div class="sealed-field">
+              <div class="sealed-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+              <p>你只能知道这里有多少颗。日期、心情、顺序和正文都仍属于对方。</p>
+              <button class="button primary" id="requestStarButton"><svg><use href="#i-star"/></svg>我想要一颗</button>
+              <small id="requestHint"></small>
+            </div>
+          </section>
+
+          <section class="bottle-zone shared-zone" aria-labelledby="sharedBottleHeading">
+            <header class="zone-heading">
+              <h2 id="sharedBottleHeading">我们的瓶子</h2>
+              <strong class="count-readout gold" id="sharedCount">0</strong>
+            </header>
+            <div class="shared-track" id="sharedRecent"></div>
+            <button class="text-action" data-goto="shared">沿着星轨往回看 <span aria-hidden="true">→</span></button>
+          </section>
+        </div>
+
+        <section class="today-strip" aria-labelledby="todayHeading">
+          <div><p id="todayDate">—</p><h2 id="todayHeading">今天也可以留下一颗。</h2></div>
+          <button class="button secondary" data-goto="write"><svg><use href="#i-pen"/></svg>写星星</button>
+        </section>
+      </section>
+
+      <section class="view" data-view-panel="write" hidden>
+        <div class="write-layout">
+          <form id="writeForm" class="writing-desk">
+            <header><h2 id="writeHeading">写一颗星</h2><p>短一点也没关系。它不是信，是未来会碰见的一瞬间。</p></header>
+            <input type="hidden" id="editingStarId">
+            <label class="field-block" for="starContent"><span>想留下什么</span><textarea id="starContent" maxlength="2000" required rows="8" placeholder="比如：刚才你说那句话的时候，我偷偷开心了很久。"></textarea><small><span id="contentCount">0</span> / 2000</small></label>
+            <div class="visibility-choice" id="visibilityChoice">
+              <label><input type="radio" name="visibility" value="hidden" checked><span><strong>先藏起来</strong><small>留在自己的瓶子里，等合法的打开时刻。</small></span></label>
+              <label><input type="radio" name="visibility" value="visible"><span><strong>现在就给我们</strong><small>写下后立刻进入“我们的瓶子”。</small></span></label>
+            </div>
+            <div class="mood-row">
+              <label>心情类型<input id="moodType" maxlength="100" placeholder="开心 / 想念 / 平静…"></label>
+              <label>一句心情<input id="moodText" maxlength="100" placeholder="写下这句话时的心情，可不写"></label>
+            </div>
+            <label class="field-block" for="starNote"><span>注释（为什么写）</span><input id="starNote" maxlength="500" placeholder="可不写"></label>
+            <div class="form-actions"><button class="button primary" id="saveStarButton" type="submit"><svg><use href="#i-send"/></svg><span>放进瓶子</span></button><button class="button quiet" id="cancelEditButton" type="button" hidden>取消编辑</button></div>
+            <p class="form-error" id="writeError" role="alert"></p>
+          </form>
+          <aside class="writing-rules">
+            <h3>这一颗会怎样</h3>
+            <ol id="writeRulePreview"><li class="active">写下</li><li>封存</li><li>等未来的打开方式</li><li>进入我们的瓶子</li></ol>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" data-view-panel="flows" hidden>
+        <div class="flow-grid">
+          <section class="session-board">
+            <header><h2>一起看星星</h2><span class="status-tag" id="sessionStatus">没有进行中</span></header>
+            <div id="sessionContent"></div>
+          </section>
+          <section class="flow-column"><header><h2>请求</h2><p>想要一颗时，不挑、不换；也可以等对方指定。</p></header><div id="requestList" class="action-list"></div></section>
+          <section class="flow-column"><header><h2>递来的星</h2><p>作者自己选中一颗，交给对方接住。</p></header><div id="offerList" class="action-list"></div></section>
+        </div>
+      </section>
+
+      <section class="view" data-view-panel="shared" hidden>
+        <div class="archive-layout">
+          <section class="archive-main">
+            <div class="archive-tools">
+              <button class="filter-toggle" id="filterToggle"><svg><use href="#i-filter"/></svg>筛选星轨</button>
+              <form class="filters" id="sharedFilters">
+                <label>作者<select id="filterAuthor"><option value="">全部</option></select></label>
+                <label>来源<select id="filterOrigin"><option value="">全部</option><option value="visible_from_start">一开始就公开</option><option value="revealed_by_request">对方请求后拆开</option><option value="revealed_by_offer">主动递出</option><option value="revealed_by_anniversary">纪念日</option><option value="revealed_by_special_day">特殊日</option></select></label>
+                <label>拆星批次<select id="filterSession"><option value="">全部批次</option></select></label>
+                <label>写入日期<input id="filterWrittenDate" type="date"></label>
+                <label>拆开日期<input id="filterOpenedDate" type="date"></label>
+                <button type="button" class="button quiet" id="clearFilters">清空</button>
+              </form>
+            </div>
+            <div class="star-timeline" id="sharedList"></div>
+          </section>
+          <aside class="star-inspector" id="starInspector">
+            <div class="inspector-empty"><svg><use href="#i-star"/></svg><p>点开星轨中的一颗，正文、来源和回应会在这里展开。</p></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <aside class="notification-panel" id="notificationPanel" aria-label="提醒" hidden>
+      <header><div><h2>提醒</h2><p>只告诉你现在需要知道的。</p></div><button class="icon-button" id="closeNotifications" aria-label="关闭提醒"><svg><use href="#i-x"/></svg></button></header>
+      <div id="notificationList" class="notification-list"></div>
+    </aside>
+
+    <nav class="mobile-nav" aria-label="手机主导航">
+      <button class="active" data-view="observatory"><svg><use href="#i-bottle"/></svg><span>三瓶</span></button>
+      <button data-view="write"><svg><use href="#i-pen"/></svg><span>写星</span></button>
+      <button data-view="flows"><svg><use href="#i-flow"/></svg><span>递与拆</span></button>
+      <button data-view="shared"><svg><use href="#i-archive"/></svg><span>星轨</span></button>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

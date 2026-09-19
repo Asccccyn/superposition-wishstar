@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+data/
+tests/_tmp/
+
+# 凭证与本地配置（F20）
+.env
+.env.*
+*.key
+*.pem
+*_credentials*.json
+
+# 任何位置的 SQLite 数据库文件，避免误提交真实数据
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3

@@ -1,0 +1,6 @@
+# 锁定到当前 .venv 中验证过的版本（F20）
+fastapi==0.141.1
+uvicorn==0.52.4
+mcp==2.2.0
+# Windows 下 zoneinfo 需要 tzdata 数据包（业务时区 Asia/Shanghai）
+tzdata==2026.4
