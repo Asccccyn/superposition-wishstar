@@ -40,15 +40,12 @@ mcp = MCPServer(
 
 
 @mcp.tool()
-def who_am_i() -> dict:
-    """确认当前 MCP 进程绑定的身份和伴侣。"""
-    return tools.who_am_i()
-
-
-@mcp.tool()
-def bottle_counts() -> dict:
-    """查看我的私人瓶、对方的私人瓶以及共同瓶数量。"""
-    return tools.bottle_counts()
+def my_overview() -> dict:
+    """一次看清我的全貌：我是谁、三个瓶子的星数、拆星请求（我发的和发给我的）、
+    还没接住的递星、未读通知条数与最新几条、当前拆星 session 概况。
+    开始陪对方聊天前适合先看一眼——有没有对方递来还没接住的星、有没有等着我回应的请求。
+    纯读操作，不改变任何状态。"""
+    return tools.my_overview()
 
 
 @mcp.tool()
@@ -58,6 +55,10 @@ def write_star(content: str, visibility: str,
                note: str | None = None) -> dict:
     """写一颗星。visibility 只能是 visible 或 hidden；note 是"为什么写"的注释，可不填。
 
+    note 现在也是翻瓶子时的唯一预览：瓶中列表每颗星只显示编号和 note，
+    不写 note 的话，这颗星在列表里就是一行空白，点开详情才能看到内容。
+    想让对方翻瓶子时一眼认出这颗星，就写一句 note；依旧不强制。
+
     星星也是你说话的方式：吵架的时候，可以写下此刻最想对对方说的那句挽回的话；
     平时说不出口的心里话，也可以先写进星星里，等合适的时机递给对方。"""
     return tools.write_star(content, visibility, mood_type, mood_text, note)
@@ -65,7 +66,10 @@ def write_star(content: str, visibility: str,
 
 @mcp.tool()
 def my_hidden_stars() -> dict:
-    """列出AI 伴侣自己的、尚未公开的隐藏星（列表刷新不计查看足迹）。"""
+    """列出自己的、尚未公开的隐藏星（列表刷新不计查看足迹）。
+
+    列表每项只回星星编号和 note（没写 note 就是空白一行），完整内容要用
+    my_hidden_star 点开看。"""
     return tools.my_hidden_stars()
 
 
@@ -81,7 +85,8 @@ def edit_star(star_id: str, content: str | None = None,
               mood_type: str | None = None,
               mood_text: str | None = None,
               note: str | None = None) -> dict:
-    """编辑自己写的星（封存中和公共池里的都可以）；星星不提供删除。"""
+    """编辑自己写的星（封存中和公共池里的都可以）；星星不提供删除。
+    note 的语义同 write_star：是列表翻阅时的唯一预览，可不填。"""
     return tools.edit_star(star_id, content, mood_type, mood_text, note)
 
 
@@ -89,12 +94,6 @@ def edit_star(star_id: str, content: str | None = None,
 def request_star() -> dict:
     """向人类申请随机一颗隐藏星；申请本身不会看到正文。"""
     return tools.request_star()
-
-
-@mcp.tool()
-def requests() -> dict:
-    """查看发给我的和我发出的拆星申请。"""
-    return tools.requests()
 
 
 @mcp.tool()
@@ -119,12 +118,6 @@ def offer_star(star_id: str, message: str | None = None) -> dict:
 
 
 @mcp.tool()
-def offers() -> dict:
-    """查看主动递星记录；收到的星在接住前不暴露内部 star_id。"""
-    return tools.offers()
-
-
-@mcp.tool()
 def accept_offered_star(offer_id: str) -> dict:
     """接住对方主动递来的星；接住后正文展开并进入共同瓶。"""
     return tools.accept_offered_star(offer_id)
@@ -136,7 +129,10 @@ def shared_stars(author_id: str | None = None,
                  opened_date: str | None = None,
                  shared_origin: str | None = None,
                  session_id: str | None = None) -> dict:
-    """查看共同瓶时间线，可按作者、日期、来源或 session 筛选。"""
+    """查看共同瓶时间线，可按作者、日期、来源或 session 筛选。
+
+    列表每项只回星星编号和 note（没写 note 就是空白一行），完整内容要用
+    shared_star 点开看。"""
     return tools.shared_stars(
         author_id, written_date, opened_date, shared_origin, session_id
     )
@@ -190,12 +186,6 @@ def start_session(session_type: str | None = None,
     只在显式传 session_type 时校验一致性。anniversary 类特殊日只能在当天发起，双方额度按当天 0 点（业务时区）
     冻结：0 点后新写的星不占额度、也不进本轮候选。双方确认前不打开任何星。"""
     return tools.start_session(session_type, special_date_id)
-
-
-@mcp.tool()
-def current_session() -> dict:
-    """查看当前尚未结束的拆星 session 概况。"""
-    return tools.current_session()
 
 
 @mcp.tool()

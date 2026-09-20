@@ -24,9 +24,18 @@ def main() -> None:
         assert j.who_am_i()["id"] == "companion"
 
         hidden = q.write_star("只允许对方自己在打开前看见", "hidden", "quiet")
-        assert hidden["author_id"] == "human"
+        # 写操作最小回执：只回 id/state，不回显 content/author 等（省 AI 侧上下文）
+        assert set(hidden) == {"id", "state"} and hidden["id"].startswith("star")
         assert q.bottle_counts()["my_private_count"] == 1
         assert j.bottle_counts()["partner_private_count"] == 1
+
+        # 聚合总览（MCP 表面已用 my_overview 取代 5 个单项只读工具）
+        ov = j.my_overview()
+        assert ov["identity"]["id"] == "companion"
+        assert ov["bottles"]["partner_private_count"] == 1
+        assert isinstance(ov["requests"], dict) and isinstance(ov["offers"], dict)
+        assert "count" in ov["unread_notifications"] and "latest" in ov["unread_notifications"]
+        assert ov["current_session"]["session"] is None
 
         req = j.request_star()
         request_id = req["id"]
@@ -64,17 +73,20 @@ def main() -> None:
         # 默认值不得偷偷补 anniversary 再报"类型不一致"，类型由日期数据派生。
         custom = q.add_special_date("第一次看海", 4, 27, None, "custom")
         cs = j.start_session(special_date_id=custom["id"])   # 只传日期，不传 type
-        assert cs["type"] == "special_day", f"custom 日期应派生 special_day：{cs}"
-        assert cs["special_date_id"] == custom["id"]
-        assert cs["quota_cutoff_at"] is None, "特殊日不按 0 点冻结"
+        # 类型派生/quota 规则由 service 层测试覆盖；MCP 回执只含 id/status
+        assert set(cs) == {"id", "status"} and cs["status"] == "waiting_confirmation"
         active = q.confirm_session(cs["id"])
         assert active["status"] == "active"
         q.finish_session(cs["id"])
 
         visible = j.write_star("一开始就公开", "visible", "warm")
-        assert visible["author_id"] == "companion"
+        assert set(visible) == {"id", "state"} and visible["id"].startswith("star")
         shared = q.shared_stars(author_id="companion")["items"]
+        # 列表页瘦身：每项只回 id 与 note，内容点开详情才有
+        assert shared and all(set(s) == {"id", "note"} for s in shared)
         assert any(s["id"] == visible["id"] for s in shared)
+        hidden_list = q.my_hidden_stars()["items"]
+        assert all(set(s) == {"id", "note"} for s in hidden_list)
 
         print("STEP 11 PASS —— actor-bound tool adapter / request / shared flow 全部通过")
     finally:
